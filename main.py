@@ -18,6 +18,38 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 
+class LibraryReader(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    about_me = db.Column(db.String(300), unique=False, nullable=True)
+
+    def __repr__(self):
+        return '<LibraryReader {} {}>'.format(
+            self.id, self.username)
+
+
+class Book(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), unique=True, nullable=False)
+    review = db.Column(db.Text(), unique=False, nullable=True)
+    link = db.Column(db.String(128), unique=True, nullable=False)
+    genre = db.Column(db.String(50), unique=False, nullable=False)
+    reader_id = db.Column(db.Integer,
+                          db.ForeignKey('library_reader.id'),
+                          nullable=False)
+    reader = db.relationship('LibraryReader',
+                             backref=db.backref('Book',
+                                                lazy=True))
+
+    def __repr__(self):
+        return '<Book {} {} {}>'.format(
+            self.id, self.name, self.genre)
+
+
+db.create_all()
+
+
 @app.route('/')
 def index():
     return
