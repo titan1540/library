@@ -121,7 +121,21 @@ class BooksList(Resource):
 
 @app.route('/')
 def index():
-    return
+    return render_template('index.html', session=session,
+                           genre_list=[
+                               {'genre': 'Detective', 'books': [{'name': 'Super detective'}, {'name': 'Doctor Who'}]}])
+
+
+@app.route('/logout')
+def logout():
+    session.pop('username', 0)
+    session.pop('user_id', 0)
+    return redirect('/login')
+
+
+@app.route('login')
+def login():
+    pass
 
 
 if __name__ == '__main__':
