@@ -5,10 +5,11 @@ import copy
 
 from flask import Flask, url_for, request, render_template, redirect
 from flask import jsonify, session, make_response
-
 from flask_sqlalchemy import SQLAlchemy
-
 from flask_restful import reqparse, abort, Api, Resource
+from werkzeug.security import generate_password_hash, check_password_hash
+
+from form import RegistrationForm, LoginForm, AddBookForm
 
 app = Flask(__name__)
 api = Api(app)
@@ -26,8 +27,8 @@ class LibraryUser(db.Model):
     about_me = db.Column(db.String(300), unique=False, nullable=True)
 
     def __repr__(self):
-        return '<LibraryUser {} {}>'.format(
-            self.id, self.username)
+        return '<LibraryUser {} {} {}>'.format(
+            self.id, self.username, self.email)
 
 
 class BookModel(db.Model):
@@ -40,7 +41,7 @@ class BookModel(db.Model):
                         db.ForeignKey('library_user.id'),
                         nullable=False)
     user = db.relationship('LibraryUser',
-                           backref=db.backref('BookModel',
+                           backref=db.backref('BooksModel',
                                               lazy=True))
 
     def __repr__(self):
@@ -50,16 +51,11 @@ class BookModel(db.Model):
 
 db.create_all()
 
-parser_user = reqparse.RequestParser()
-parser_user.add_argument('username', required=True)
-parser_user.add_argument('email', required=True)
-parser_user.add_argument('about_me', required=False)
-
-parser_book = reqparse.RequestParser()
-parser_book.add_argument('name', required=True)
-parser_book.add_argument('link', required=True)
-parser_book.add_argument('genre', required=True)
-parser_book.add_argument('review', required=False)
+parser = reqparse.RequestParser()
+parser.add_argument('name', required=True)
+parser.add_argument('link', required=True)
+parser.add_argument('genre', required=True)
+parser.add_argument('review', required=False)
 
 
 def abort_if_book_not_found(book_id):
@@ -84,7 +80,7 @@ class Books(Resource):
 
     def put(self, book_id):
         abort_if_book_not_found(book_id)
-        args = parser_book.parse_args()
+        args = parser.parse_args()
         book = BookModel.query.filter_by(id=book_id).first()
 
         book.name = args['name']
@@ -105,7 +101,7 @@ class BooksList(Resource):
         return jsonify({'books': books})
 
     def post(self):
-        args = parser_book.parse_args()
+        args = parser.parse_args()
 
         user = LibraryUser.query.filter_by(id=session['user_id']).first()
         book = BookModel(name=args['name'],
@@ -126,6 +122,31 @@ def index():
                                {'genre': 'Detective', 'books': [{'name': 'Super detective'}, {'name': 'Doctor Who'}]}])
 
 
+@app.route('/registration', methods=['GET', 'POST'])
+def registration():
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+        password_confirm = form.password_confirm.data
+        email = form.email.data
+
+        if password == password_confirm and \
+                LibraryUser.query.filter_by(username=username).first() is None:
+            user = LibraryUser(username=username,
+                               password_hash=generate_password_hash(password),
+                               email=email)
+
+            db.session.add(user)
+            db.session.commit()
+
+            session['username'] = username
+            session['user_id'] = user.id
+
+        return redirect('/')
+    return render_template('registration.html', session=session, form=form)
+
+
 @app.route('/logout')
 def logout():
     session.pop('username', 0)
@@ -133,9 +154,23 @@ def logout():
     return redirect('/login')
 
 
-@app.route('login')
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    pass
+    if 'username' in session:
+        return redirect('/')
+    form = LoginForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+
+        user = LibraryUser.query.filter_by(username=username).first()
+
+        if user is not None:
+            if check_password_hash(user.password_hash, password):
+                session['username'] = username
+                session['user_id'] = user.id
+                return redirect('/')
+    return render_template('login.html', session=session, form=form)
 
 
 if __name__ == '__main__':
