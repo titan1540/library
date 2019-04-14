@@ -23,3 +23,11 @@ class AddBookForm(FlaskForm):
     genre = StringField('Жанр', validators=[DataRequired()])
     review = TextAreaField('Отзыв о книге')
     submit = SubmitField('Добавить')
+
+
+class EditBookForm(FlaskForm):
+    name = StringField('Название книги', validators=[DataRequired()])
+    link = StringField('Ссылка на книгу', validators=[DataRequired()])
+    genre = StringField('Жанр', validators=[DataRequired()])
+    review = TextAreaField('Отзыв о книге')
+    submit = SubmitField('Изменить')

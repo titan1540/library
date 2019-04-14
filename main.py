@@ -9,7 +9,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_restful import reqparse, abort, Api, Resource
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from form import RegistrationForm, LoginForm, AddBookForm
+from form import RegistrationForm, LoginForm, AddBookForm, EditBookForm
 
 app = Flask(__name__)
 api = Api(app)
@@ -64,7 +64,8 @@ def abort_if_book_not_found(book_id):
 
 
 class Book(Resource):
-    def get(self, book_id):
+    @staticmethod
+    def get(book_id):
         abort_if_book_not_found(book_id)
         book = BookModel.query.filter_by(id=book_id).first()
         return jsonify({'book': {'id': book.id,
@@ -73,7 +74,8 @@ class Book(Resource):
                                  'link': book.link,
                                  'review': book.review}})
 
-    def delete(self, book_id):
+    @staticmethod
+    def delete(book_id):
         abort_if_book_not_found(book_id)
         book = BookModel.query.filter_by(id=book_id).first()
 
@@ -82,7 +84,8 @@ class Book(Resource):
 
         return jsonify({'success': 'OK'})
 
-    def put(self, book_id):
+    @staticmethod
+    def put(book_id):
         abort_if_book_not_found(book_id)
         args = parser.parse_args()
         book = BookModel.query.filter_by(id=book_id).first()
@@ -99,7 +102,8 @@ class Book(Resource):
 
 
 class BooksList(Resource):
-    def get(self):
+    @staticmethod
+    def get():
         books = BookModel.query.all()
 
         books_list = [{'id': book.id,
@@ -111,7 +115,8 @@ class BooksList(Resource):
 
         return jsonify({'books': books_list})
 
-    def post(self):
+    @staticmethod
+    def post():
         args = parser.parse_args()
 
         user = LibraryUser.query.filter_by(id=session['user_id']).first()
@@ -128,8 +133,7 @@ class BooksList(Resource):
 
 @app.route('/')
 def index():
-    bl = BooksList()
-    books = json.loads(bl.get().data)
+    books = json.loads(BooksList.get().data)
 
     return render_template('index.html', session=session,
                            books=books)
@@ -207,9 +211,30 @@ def add_book():
 
 @app.route('/book/<int:book_id>')
 def book(book_id):
-    b = Book()
-    book = json.loads(b.get(book_id).data)
+    book = json.loads(Book.get(book_id).data)
     return render_template('book.html', book=book['book'], session=session)
+
+
+@app.route('/edit_book/<int:book_id>', methods=['GET', 'POST'])
+def edit_book(book_id):
+    form = EditBookForm()
+    if form.validate_on_submit():
+        name = form.name.data
+        link = form.link.data
+        genre = form.genre.data
+        review = form.review.data
+        book = BookModel.query.filter_by(id=book_id).first()
+
+        book.name = name
+        book.link = link
+        book.genre = genre
+        book.review = review
+
+        db.session.add(book)
+        db.session.commit()
+        return redirect('/book/{}'.format(book_id))
+    book = json.loads(Book.get(book_id).data)
+    return render_template('edit_book.html', session=session, book=book['book'], form=form)
 
 
 if __name__ == '__main__':

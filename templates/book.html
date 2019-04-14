@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<a href="/edit_book">Править информацию о книге</a>
+<a href="/edit_book/{{ book['id'] }}">Править информацию о книге</a>
 <div>
     <br>
     <h2><a href="{{ book['link'] }}" target="_blank">{{ book['name'] }}</a></h2>

@@ -17,7 +17,7 @@
 <body>
 <header>
     <nav class="navbar navbar-light" style="background-color: #d4d4d4;">
-        <a class="navbar-brand" href="#">Библиотека</a>
+        <a class="navbar-brand" href="/">Библиотека</a>
         {% if "username" in session %}
         <a class="navbar-brand" href="/logout">{{ session['username'] }}</a>
         {% endif %}
