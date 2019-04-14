@@ -2,16 +2,9 @@
 
 {% block content %}
 <a href="/add_book">Добавить книгу</a>
-{% for genre in genre_list %}
-<div class="alert alert-dark" role="alert" style="height: 100%">
-    <div style="background-color: #c3c3c3;">
-        <h2>{{ genre['genre'] }}</h2>
-    </div>
-    {% for book in genre['books'] %}
-    <div style="border: 1px solid black; display: inline-block; border-radius: 5px; padding: 5px 10px;">
-        <h5 style="margin-bottom: 3px;">{{ book['name'] }}</h5>
-    </div>
-    {% endfor %}
+{% for book in books['books'] %}
+<div class="alert alert-dark" role="alert">
+    <h2><a href="/book/{{ book['id'] }}">{{ book['name']}}</a></h2>
 </div>
 {% endfor %}
 {% endblock %}

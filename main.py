@@ -41,7 +41,7 @@ class BookModel(db.Model):
                         db.ForeignKey('library_user.id'),
                         nullable=False)
     user = db.relationship('LibraryUser',
-                           backref=db.backref('BooksModel',
+                           backref=db.backref('BookModel',
                                               lazy=True))
 
     def __repr__(self):
@@ -63,11 +63,15 @@ def abort_if_book_not_found(book_id):
         abort(404, message="Book {} not found".format(book_id))
 
 
-class Books(Resource):
+class Book(Resource):
     def get(self, book_id):
         abort_if_book_not_found(book_id)
         book = BookModel.query.filter_by(id=book_id).first()
-        return jsonify({'book': book})
+        return jsonify({'book': {'id': book.id,
+                                 'genre': book.genre,
+                                 'name': book.name,
+                                 'link': book.link,
+                                 'review': book.review}})
 
     def delete(self, book_id):
         abort_if_book_not_found(book_id)
@@ -98,7 +102,14 @@ class BooksList(Resource):
     def get(self):
         books = BookModel.query.all()
 
-        return jsonify({'books': books})
+        books_list = [{'id': book.id,
+                       'genre': book.genre,
+                       'name': book.name,
+                       'link': book.link,
+                       'review': book.review}
+                      for book in books]
+
+        return jsonify({'books': books_list})
 
     def post(self):
         args = parser.parse_args()
@@ -117,9 +128,11 @@ class BooksList(Resource):
 
 @app.route('/')
 def index():
+    bl = BooksList()
+    books = json.loads(bl.get().data)
+
     return render_template('index.html', session=session,
-                           genre_list=[
-                               {'genre': 'Detective', 'books': [{'name': 'Super detective'}, {'name': 'Doctor Who'}]}])
+                           books=books)
 
 
 @app.route('/registration', methods=['GET', 'POST'])
@@ -143,7 +156,7 @@ def registration():
             session['username'] = username
             session['user_id'] = user.id
 
-        return redirect('/')
+            return redirect('/')
     return render_template('registration.html', session=session, form=form)
 
 
@@ -156,8 +169,6 @@ def logout():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if 'username' in session:
-        return redirect('/')
     form = LoginForm()
     if form.validate_on_submit():
         username = form.username.data
@@ -171,6 +182,34 @@ def login():
                 session['user_id'] = user.id
                 return redirect('/')
     return render_template('login.html', session=session, form=form)
+
+
+@app.route('/add_book', methods=['GET', 'POST'])
+def add_book():
+    if 'username' not in session:
+        return redirect('/')
+    form = AddBookForm()
+    if form.validate_on_submit():
+        name = form.name.data
+        link = form.link.data
+        genre = form.genre.data
+        review = form.review.data
+        book = BookModel(name=name,
+                         link=link,
+                         genre=genre,
+                         review=review)
+        user = LibraryUser.query.filter_by(id=session['user_id']).first()
+        user.BookModel.append(book)
+        db.session.commit()
+        return redirect('/')
+    return render_template('add_book.html', session=session, form=form)
+
+
+@app.route('/book/<int:book_id>')
+def book(book_id):
+    b = Book()
+    book = json.loads(b.get(book_id).data)
+    return render_template('book.html', book=book['book'], session=session)
 
 
 if __name__ == '__main__':

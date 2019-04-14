@@ -1,41 +1,40 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Регисрация</h1>
-<a href="/login">Войти</a>
+<h1>Добавить книгу</h1>
 <form method="post" novalidate>
     {{ form.hidden_tag() }}
     <p>
-        {{ form.username.label }}<br>
-        {{ form.username }}<br>
-        {% for error in form.username.errors %}
+        {{ form.name.label }}<br>
+        {{ form.name }}<br>
+        {% for error in form.name.errors %}
     <div class="alert alert-danger" role="alert">
         {{ error }}
     </div>
     {% endfor %}
     </p>
     <p>
-        {{ form.password.label }}<br>
-        {{ form.password }}<br>
-        {% for error in form.password.errors %}
+        {{ form.link.label }}<br>
+        {{ form.link }}<br>
+        {% for error in form.link.errors %}
     <div class="alert alert-danger" role="alert">
         {{ error }}
     </div>
     {% endfor %}
     </p>
     <p>
-        {{ form.password_confirm.label }}<br>
-        {{ form.password_confirm }}<br>
-        {% for error in form.password_confirm.errors %}
+        {{ form.genre.label }}<br>
+        {{ form.genre }}<br>
+        {% for error in form.genre.errors %}
     <div class="alert alert-danger" role="alert">
         {{ error }}
     </div>
     {% endfor %}
     </p>
     <p>
-        {{ form.email.label }}<br>
-        {{ form.email}}<br>
-        {% for error in form.email.errors %}
+        {{ form.review.label }}<br>
+        {{ form.review }}<br>
+        {% for error in form.review.errors %}
     <div class="alert alert-danger" role="alert">
         {{ error }}
     </div>

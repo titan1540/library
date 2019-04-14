@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+<a href="/edit_book">Править информацию о книге</a>
+<div>
+    <br>
+    <h2><a href="{{ book['link'] }}" target="_blank">{{ book['name'] }}</a></h2>
+    <p>Жанр: <i>{{ book['genre'] }}</i></p>
+    <blockquote class="blockquote" style="border: 1px solid #000000; padding: 10px;">{{ book['review'] }}</blockquote>
+</div>
+{% endblock %}
