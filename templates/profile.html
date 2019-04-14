@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if session['user_id'] == user.id %}
+<a href="/edit_profile/{{ user['id'] }}">Править информацию о Вас</a>
+{% endif %}
+
+<div>
+    <br>
+    <h2>{{ user.username }}</h2>
+    <h3>Обо мне:</h3>
+    <blockquote class="blockquote" style="border: 1px solid #000000; padding: 10px;">{{ user.about_me }}</blockquote>
+</div>
+{% endblock %}

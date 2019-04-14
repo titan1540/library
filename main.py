@@ -9,7 +9,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_restful import reqparse, abort, Api, Resource
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from form import RegistrationForm, LoginForm, AddBookForm, EditBookForm
+from form import RegistrationForm, LoginForm, AddBookForm, EditBookForm, EditProfileForm
 
 app = Flask(__name__)
 api = Api(app)
@@ -152,7 +152,8 @@ def registration():
                 LibraryUser.query.filter_by(username=username).first() is None:
             user = LibraryUser(username=username,
                                password_hash=generate_password_hash(password),
-                               email=email)
+                               email=email,
+                               about_me='')
 
             db.session.add(user)
             db.session.commit()
@@ -217,6 +218,8 @@ def book(book_id):
 
 @app.route('/edit_book/<int:book_id>', methods=['GET', 'POST'])
 def edit_book(book_id):
+    if 'username' not in session:
+        return redirect('/')
     form = EditBookForm()
     if form.validate_on_submit():
         name = form.name.data
@@ -235,6 +238,46 @@ def edit_book(book_id):
         return redirect('/book/{}'.format(book_id))
     book = json.loads(Book.get(book_id).data)
     return render_template('edit_book.html', session=session, book=book['book'], form=form)
+
+
+@app.route('/profile/<int:user_id>')
+def profile(user_id):
+    user = LibraryUser.query.filter_by(id=user_id).first()
+    return render_template('profile.html', session=session, user=user)
+
+
+@app.route('/edit_profile/<int:user_id>', methods=['GET', 'POST'])
+def edit_profile(user_id):
+    if 'username' not in session:
+        return redirect('/')
+    if session['user_id'] != user_id:
+        return redirect('/profile/{}'.format(user_id))
+    form = EditProfileForm()
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+        password_confirm = form.password_confirm.data
+        email = form.email.data
+        about_me = form.about_me.data
+
+        if password == password_confirm and \
+                LibraryUser.query.filter_by(username=username).first() is None:
+            user = LibraryUser.query.filter_by(id=user_id).first()
+
+            user.username = username
+            user.password_hash = generate_password_hash(password)
+            user.email = email
+            user.about_me = about_me
+
+            db.session.add(user)
+            db.session.commit()
+
+            session['username'] = username
+            session['user_id'] = user.id
+
+            return redirect('/')
+    user = LibraryUser.query.filter_by(id=user_id).first()
+    return render_template('edit_profile.html', session=session, user=user, form=form)
 
 
 if __name__ == '__main__':

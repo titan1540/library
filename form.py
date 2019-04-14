@@ -31,3 +31,12 @@ class EditBookForm(FlaskForm):
     genre = StringField('Жанр', validators=[DataRequired()])
     review = TextAreaField('Отзыв о книге')
     submit = SubmitField('Изменить')
+
+
+class EditProfileForm(FlaskForm):
+    username = StringField('Логин', validators=[DataRequired()])
+    password = PasswordField('Пароль', validators=[DataRequired()])
+    password_confirm = PasswordField('Повторите пароль', validators=[DataRequired(), EqualTo('password')])
+    email = StringField('Почта', validators=[DataRequired()])
+    about_me = TextAreaField('Расскажите о себе')
+    submit = SubmitField('Сохранить изменения')

@@ -12,15 +12,16 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
-    <title>{{ title }}</title>
+    <title>Библиотека</title>
 </head>
 <body>
 <header>
     <nav class="navbar navbar-light" style="background-color: #d4d4d4;">
         <a class="navbar-brand" href="/">Библиотека</a>
         {% if "username" in session %}
-        <a class="navbar-brand" href="/logout">{{ session['username'] }}</a>
+        <a class="navbar-brand" href="/profile/{{ session['user_id'] }}">{{ session['username'] }}</a>
         {% endif %}
+        <a class="navbar-brand btn" href="/logout">Выйти</a>
     </nav>
 </header>
 <main role="main" class="container">
